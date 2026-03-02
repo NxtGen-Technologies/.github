@@ -11,6 +11,10 @@ on:
         description: 'Command to run before npm ci (e.g., checkout sibling repos for local deps)'
         type: string
         default: ''
+      install-command:
+        description: 'Install command (default: npm ci). Use npm install for repos that delete lockfile.'
+        type: string
+        default: 'npm ci'
       build-command:
         description: Optional build command to run after install (e.g., npm run build)
         type: string
@@ -48,7 +52,7 @@ jobs:
         run: ${{ inputs.pre-install-command }}
 
       - name: Install dependencies
-        run: npm ci
+        run: ${{ inputs.install-command }}
 
       - name: Run tests
         run: npm test
