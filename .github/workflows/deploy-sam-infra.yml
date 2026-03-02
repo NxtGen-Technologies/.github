@@ -1,0 +1,90 @@
+name: Deploy SAM Infrastructure
+
+on:
+  workflow_call:
+    inputs:
+      stack-name-dev:
+        description: CloudFormation stack name for dev
+        required: true
+        type: string
+      stack-name-prod:
+        description: CloudFormation stack name for prod
+        required: true
+        type: string
+      config-prefix-dev:
+        description: SSM config prefix for dev
+        type: string
+        default: '/mss/dev/'
+      config-prefix-prod:
+        description: SSM config prefix for prod
+        type: string
+        default: '/mss/prod/'
+      extra-parameters:
+        description: Additional SAM parameter overrides (space-separated Key=Value)
+        type: string
+        default: ''
+      node-version:
+        description: Node.js version
+        type: string
+        default: '20'
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Deploy SAM stack
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            STACK_NAME="${{ inputs.stack-name-prod }}"
+            PARAMS="Environment=prod AppConfigPrefix=${{ inputs.config-prefix-prod }}"
+            echo "Deploying infra to PROD"
+          else
+            STACK_NAME="${{ inputs.stack-name-dev }}"
+            PARAMS="Environment=dev AppConfigPrefix=${{ inputs.config-prefix-dev }}"
+            echo "Deploying infra to DEV"
+          fi
+
+          # Append extra parameters if provided
+          if [ -n "${{ inputs.extra-parameters }}" ]; then
+            PARAMS="$PARAMS ${{ inputs.extra-parameters }}"
+          fi
+
+          sam deploy \
+            --stack-name "$STACK_NAME" \
+            --template-file template.yaml \
+            --parameter-overrides $PARAMS \
+            --capabilities CAPABILITY_IAM \
+            --resolve-s3 \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --region "${{ secrets.AWS_REGION }}"

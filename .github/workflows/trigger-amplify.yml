@@ -1,0 +1,37 @@
+name: Trigger Amplify Build
+
+on:
+  workflow_call:
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      AMPLIFY_APP_ID:
+        required: true
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Trigger Amplify build
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            BRANCH="main"
+          else
+            BRANCH="develop"
+          fi
+          echo "Triggering Amplify rebuild for branch: $BRANCH"
+          aws amplify start-job \
+            --app-id "${{ secrets.AMPLIFY_APP_ID }}" \
+            --branch-name "$BRANCH" \
+            --job-type RELEASE

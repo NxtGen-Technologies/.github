@@ -1,0 +1,83 @@
+name: Deploy Lambda Code
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node.js version
+        type: string
+        default: '20'
+      pre-install-command:
+        description: Command to run before npm ci (e.g., checkout sibling repos for file: deps)
+        type: string
+        default: ''
+      build-command:
+        description: Optional build command to run after install (e.g., npm run build)
+        type: string
+        default: ''
+      zip-paths:
+        description: Paths to include in Lambda zip (space-separated)
+        type: string
+        default: 'src package.json package-lock.json node_modules'
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      LAMBDA_FUNCTION_DEV:
+        required: true
+      LAMBDA_FUNCTION_PROD:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Pre-install setup
+        if: inputs.pre-install-command != ''
+        run: ${{ inputs.pre-install-command }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        if: inputs.build-command != ''
+        run: ${{ inputs.build-command }}
+
+      - name: Build deployment package
+        run: |
+          mkdir -p dist
+          zip -r dist/lambda.zip ${{ inputs.zip-paths }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to Lambda
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_PROD }}"
+            echo "Deploying to PROD"
+          else
+            FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_DEV }}"
+            echo "Deploying to DEV"
+          fi
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://dist/lambda.zip

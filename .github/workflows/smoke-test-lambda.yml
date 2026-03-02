@@ -1,0 +1,112 @@
+name: Smoke Test Lambda
+
+on:
+  workflow_call:
+    inputs:
+      endpoints:
+        description: |
+          Newline-separated test cases: METHOD /path EXPECTED_STATUS
+          OPTIONS gets preflight headers. POST/PUT/PATCH get Content-Type + empty body.
+          Example:
+            OPTIONS /admin 204
+            POST /admin/practice 401
+            GET /health 200
+        required: true
+        type: string
+      origin-dev:
+        description: Origin header for dev CORS checks
+        type: string
+        default: ''
+      origin-prod:
+        description: Origin header for prod CORS checks
+        type: string
+        default: ''
+    secrets:
+      SMOKE_URL_DEV:
+        required: true
+      SMOKE_URL_PROD:
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set environment
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "SMOKE_URL=${{ secrets.SMOKE_URL_PROD }}" >> $GITHUB_ENV
+            echo "ORIGIN=${{ inputs.origin-prod }}" >> $GITHUB_ENV
+            echo "ENV_LABEL=prod" >> $GITHUB_ENV
+          else
+            echo "SMOKE_URL=${{ secrets.SMOKE_URL_DEV }}" >> $GITHUB_ENV
+            echo "ORIGIN=${{ inputs.origin-dev }}" >> $GITHUB_ENV
+            echo "ENV_LABEL=dev" >> $GITHUB_ENV
+          fi
+
+      - name: Wait for Lambda propagation
+        run: sleep 15
+
+      - name: Run smoke tests
+        env:
+          ENDPOINTS: ${{ inputs.endpoints }}
+        run: |
+          PASS_FILE=$(mktemp)
+          echo "true" > "$PASS_FILE"
+          RESULTS=$(mktemp)
+
+          echo "SMOKE_URL=${SMOKE_URL}"
+
+          check() {
+            local label="$1" expected="$2"
+            shift 2
+            local actual
+            actual=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$@" 2>/dev/null) || actual="000"
+            if [ "$actual" = "$expected" ]; then
+              echo "| ${label} | ${expected} | ${actual} | ✅ |" >> "$RESULTS"
+            else
+              echo "| ${label} | ${expected} | ${actual} | ❌ |" >> "$RESULTS"
+              echo "false" > "$PASS_FILE"
+            fi
+          }
+
+          while IFS= read -r line; do
+            # Skip empty lines
+            [ -z "$(echo "$line" | tr -d '[:space:]')" ] && continue
+
+            METHOD=$(echo "$line" | awk '{print $1}')
+            EPATH=$(echo "$line" | awk '{print $2}')
+            EXPECTED=$(echo "$line" | awk '{print $3}')
+            LABEL="${METHOD} ${EPATH} → ${EXPECTED}"
+
+            if [ "$METHOD" = "OPTIONS" ]; then
+              check "$LABEL" "$EXPECTED" \
+                -X OPTIONS "${SMOKE_URL}${EPATH}" \
+                -H "Origin: ${ORIGIN}" \
+                -H "Access-Control-Request-Method: POST" \
+                -H "Access-Control-Request-Headers: Authorization,X-Internal-Token"
+            elif [ "$METHOD" = "POST" ] || [ "$METHOD" = "PUT" ] || [ "$METHOD" = "PATCH" ]; then
+              check "$LABEL" "$EXPECTED" \
+                -X "$METHOD" "${SMOKE_URL}${EPATH}" \
+                -H "Content-Type: application/json" \
+                -d '{}'
+            else
+              check "$LABEL" "$EXPECTED" \
+                -X "$METHOD" "${SMOKE_URL}${EPATH}"
+            fi
+          done <<< "$ENDPOINTS"
+
+          {
+            echo "## Smoke Tests (${ENV_LABEL})"
+            echo ""
+            echo "| Test | Expected | Actual | Result |"
+            echo "|------|----------|--------|--------|"
+            cat "$RESULTS"
+            echo ""
+            if [ "$(cat "$PASS_FILE")" = "false" ]; then
+              echo "❌ One or more smoke tests failed."
+            else
+              echo "✅ All smoke tests passed."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          [ "$(cat "$PASS_FILE")" = "true" ]

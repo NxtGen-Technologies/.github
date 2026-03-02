@@ -1,0 +1,31 @@
+name: Detect Template Changes
+
+on:
+  workflow_call:
+    outputs:
+      infra_changed:
+        description: Whether template.yaml was modified in this push (or workflow_dispatch)
+        value: ${{ jobs.check.outputs.changed }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.detect.outputs.changed }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for template.yaml changes
+        id: detect
+        run: |
+          # workflow_dispatch always deploys infra (may be triggered specifically for that)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          elif git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q '^template\.yaml$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
