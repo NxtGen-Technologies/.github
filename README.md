@@ -14,7 +14,7 @@ Reusable GitHub Actions workflow templates for the My Safe Spaces platform.
 
 ## Standard Lambda Service Workflow
 
-Each Lambda repo composes these templates into a `deploy-{service}.yml`:
+Each Lambda repo composes these templates into a `deploy-{product}-{service}.yml` (e.g., `deploy-journipro-admin.yml`, `deploy-journipro-auth.yml`):
 
 ```
 detect-changes ──┐
