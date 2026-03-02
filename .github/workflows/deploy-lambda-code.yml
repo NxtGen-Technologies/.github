@@ -23,6 +23,14 @@ on:
         description: Paths to include in Lambda zip (space-separated)
         type: string
         default: 'src package.json package-lock.json node_modules'
+      artifact-dir:
+        description: 'Directory for the zip artifact. Override for TypeScript repos where dist/ is build output.'
+        type: string
+        default: 'dist'
+      zip-working-dir:
+        description: 'Directory to cd into before zipping. Files are relative to this dir.'
+        type: string
+        default: '.'
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -67,8 +75,9 @@ jobs:
 
       - name: Build deployment package
         run: |
-          mkdir -p dist
-          zip -r dist/lambda.zip ${{ inputs.zip-paths }}
+          mkdir -p ${{ inputs.artifact-dir }}
+          cd ${{ inputs.zip-working-dir }}
+          zip -r $GITHUB_WORKSPACE/${{ inputs.artifact-dir }}/lambda.zip ${{ inputs.zip-paths }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -88,4 +97,4 @@ jobs:
           fi
           aws lambda update-function-code \
             --function-name "$FUNCTION_NAME" \
-            --zip-file fileb://dist/lambda.zip
+            --zip-file fileb://${{ inputs.artifact-dir }}/lambda.zip
