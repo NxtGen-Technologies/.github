@@ -19,6 +19,14 @@ on:
         description: SSM config prefix for prod
         type: string
         default: '/mss/prod/'
+      pre-install-command:
+        description: 'Shell command to run before install, such as cloning sibling repos'
+        type: string
+        default: ''
+      install-command:
+        description: 'Install command override, defaults to npm ci'
+        type: string
+        default: 'npm ci'
       extra-parameters:
         description: Additional SAM parameter overrides (space-separated Key=Value)
         type: string
@@ -47,8 +55,14 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
 
+      - name: Pre-install setup
+        if: inputs.pre-install-command != ''
+        run: ${{ inputs.pre-install-command }}
+        env:
+          CORE_REPO_READ_TOKEN: ${{ secrets.CORE_REPO_READ_TOKEN || '' }}
+
       - name: Install dependencies
-        run: npm ci
+        run: ${{ inputs.install-command }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
