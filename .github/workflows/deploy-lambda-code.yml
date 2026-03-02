@@ -8,7 +8,7 @@ on:
         type: string
         default: '20'
       pre-install-command:
-        description: Command to run before npm ci (e.g., checkout sibling repos for file: deps)
+        description: 'Command to run before npm ci (e.g., checkout sibling repos for local deps)'
         type: string
         default: ''
       build-command:
