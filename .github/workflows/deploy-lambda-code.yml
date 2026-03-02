@@ -34,6 +34,8 @@ on:
         required: true
       LAMBDA_FUNCTION_PROD:
         required: true
+      CORE_REPO_READ_TOKEN:
+        required: false
 
 jobs:
   deploy:
@@ -50,6 +52,8 @@ jobs:
       - name: Pre-install setup
         if: inputs.pre-install-command != ''
         run: ${{ inputs.pre-install-command }}
+        env:
+          CORE_REPO_READ_TOKEN: ${{ secrets.CORE_REPO_READ_TOKEN }}
 
       - name: Install dependencies
         run: ${{ inputs.install-command }}
