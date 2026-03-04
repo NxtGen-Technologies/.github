@@ -31,7 +31,11 @@ jobs:
             BRANCH="develop"
           fi
           echo "Triggering Amplify rebuild for branch: $BRANCH"
-          aws amplify start-job \
+          if aws amplify start-job \
             --app-id "${{ secrets.AMPLIFY_APP_ID }}" \
             --branch-name "$BRANCH" \
-            --job-type RELEASE
+            --job-type RELEASE; then
+            echo "Amplify build triggered successfully"
+          else
+            echo "::warning::Amplify build trigger failed (likely already running). This is non-fatal."
+          fi
