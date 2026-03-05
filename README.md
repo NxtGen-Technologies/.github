@@ -70,13 +70,18 @@ mkdir -p ~/.claude
 ln -sf /path/to/.github/claude/global-standards.md ~/.claude/CLAUDE.md
 ```
 
-**Windows (requires Developer Mode):**
+**Windows** (requires [Developer Mode](https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development) — Settings > Privacy & Security > For Developers):
 ```powershell
 mkdir "$env:USERPROFILE\.claude" -Force
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\CLAUDE.md" -Target "C:\path\to\.github\claude\global-standards.md"
 ```
 
 Replace `/path/to/.github` with wherever you cloned this repo. The symlink means `git pull` on this repo automatically updates your Claude instructions.
+
+**Fallback (no Developer Mode):** Copy instead of symlink — re-run after pulling updates:
+```bash
+cp /path/to/.github/claude/global-standards.md ~/.claude/CLAUDE.md
+```
 
 ### How it works
 
