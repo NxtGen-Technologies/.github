@@ -20,6 +20,10 @@
 - [ ] **Remove hardcoded super admin emails from Lambda handlers**
 - [ ] **Unified admin API custom domain** — Single custom domain (`api-admin-dev.mysafespaces.net` / `api-admin.mysafespaces.net`) with path-based routing to all admin Lambda services (CRM, HR, RBAC, SWISS, CN, CP, Customers, Jobs). Eliminates raw API Gateway URLs in browser, simplifies CORS (single origin), and reduces frontend SSM params to one `REACT_APP_ADMIN_API_URL`. Requires: ACM cert, API Gateway custom domain + base path mappings, Route 53 record, update SSM params + Amplify rebuild.
 
+### Shared SSM Parameter Stack
+
+- [ ] **CloudFormation stack for shared SSM parameters** — Create `mss-shared-params-{env}` stack (in `.github` repo or dedicated infra repo) that defines all cross-repo SSM parameters as `AWS::SSM::Parameter` resources. Currently portal URLs, CORS origins, and other shared config are created manually via CLI — no version control, no drift detection, no audit trail. Stack should cover: portal URLs (`/mysafespaces/{env}/portal/*`), CORS allowed origins, and any other params consumed by multiple repos. Deploy via CI/CD with `workflow_dispatch` per environment.
+
 ### CI/CD Standardization
 
 Align all repos with the workflow standards in `claude/global-standards.md` → "Git & CI/CD". Reference implementation: `mss-journipro-admin/.github/workflows/deploy-journipro-admin.yml`.
