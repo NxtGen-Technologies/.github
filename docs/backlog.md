@@ -4,6 +4,7 @@
 
 - [ ] **Booking settings → practice level** — Move booking settings (currently per-practitioner in Scheduling) to the Practice Settings page as practice-level defaults. Practitioner booking settings become overrides on the practice defaults. Affects: `mss-journipro-web` (practice settings UI, practitioner scheduling UI), `mss-journipro-scheduling` (backend schema + API to support practice-level settings with practitioner overrides).
 - [ ] **SEO report**
+- [ ] **Booking portal — website header & footer** — Replace the booking portal's minimal header/footer (`mss-journipro-booking-portal`) with the full `mysafespaces-website` header (two-row: top utility bar + main nav with dropdowns) and footer (5-column grid with links + contact row). The website uses vanilla CSS + CRA; the booking portal uses Next.js 15 + TypeScript + Tailwind v4 — so the website components need to be adapted (port CSS to Tailwind or import as standalone CSS). Booking-specific nav items (Book a Session, My Bookings, Login/Logout based on auth state) should be integrated into the website-style header. Affects: `mss-journipro-booking-portal` (Header.tsx, Footer.tsx, layout.tsx, globals.css).
 - [ ] **Stripe integration**
 - [ ] **Newsfeed** — Bring into admin tool
 - [ ] **IT & Finance portal** — Adjust links
