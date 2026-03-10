@@ -62,8 +62,10 @@ jobs:
             local actual
             actual=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$@" 2>/dev/null) || actual="000"
             if [ "$actual" = "$expected" ]; then
+              echo "✅ ${label} — got ${actual}"
               echo "| ${label} | ${expected} | ${actual} | ✅ |" >> "$RESULTS"
             else
+              echo "❌ ${label} — expected ${expected}, got ${actual}"
               echo "| ${label} | ${expected} | ${actual} | ❌ |" >> "$RESULTS"
               echo "false" > "$PASS_FILE"
             fi
