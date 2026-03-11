@@ -78,7 +78,8 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 **Testing improvements (from CORS post-mortem):**
 - [ ] **Async mocks must match real signatures** — admin tests mock `corsHeadersForEvent` as sync, hiding async/await bugs. Change mocks to `async` functions.
 - [ ] **Response shape assertions** — add helper that rejects Promises in `headers` field to catch this class of bug.
-- [ ] **Smoke tests for authenticated paths** — current smoke tests only check `OPTIONS 204` and `GET 400`. Add authenticated endpoint checks to verify DynamoDB/IAM are working.
+- [x] **Smoke tests for authenticated paths** — expanded: scheduling (5 endpoints), patient-sessions (6 endpoints) now test auth enforcement (401) and validation (400).
+- [ ] **Admin Lambda producer-side contract tests** — add contract tests in `mss-journipro-admin` for `provisionPatient` and `assignPatientTherapist` response shapes. Consumer-side tests exist in scheduling (`contracts.test.ts`); producer-side needed to catch drift if admin handlers change.
 
 ### JourniPro — SSM Parameter Cleanup
 - [ ] **Reorganize flat `/mss/{env}/` params** — Move `backend_base_url`, `cognito_*`, `db_*`, `encryption_key`, `session_*`, `cookie_*` into sub-namespaces (`/mss/{env}/auth/`, `/mss/{env}/db/`, `/mss/{env}/session/`) for better organization
