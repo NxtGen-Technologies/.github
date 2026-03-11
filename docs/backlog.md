@@ -2,7 +2,6 @@
 
 **Last Updated:** March 5, 2026
 
-- [ ] **Booking settings → practice level** — Move booking settings (currently per-practitioner in Scheduling) to the Practice Settings page as practice-level defaults. Practitioner booking settings become overrides on the practice defaults. Affects: `mss-journipro-web` (practice settings UI, practitioner scheduling UI), `mss-journipro-scheduling` (backend schema + API to support practice-level settings with practitioner overrides).
 - [ ] **SEO report**
 - [ ] **Booking portal — website header & footer** — Replace the booking portal's minimal header/footer (`mss-journipro-booking-portal`) with the full `mysafespaces-website` header (two-row: top utility bar + main nav with dropdowns) and footer (5-column grid with links + contact row). The website uses vanilla CSS + CRA; the booking portal uses Next.js 15 + TypeScript + Tailwind v4 — so the website components need to be adapted (port CSS to Tailwind or import as standalone CSS). Booking-specific nav items (Book a Session, My Bookings, Login/Logout based on auth state) should be integrated into the website-style header. Affects: `mss-journipro-booking-portal` (Header.tsx, Footer.tsx, layout.tsx, globals.css).
 - [ ] **Stripe integration**
@@ -21,13 +20,6 @@
 - [ ] **Remove hardcoded super admin emails from Lambda handlers**
 - [ ] **Unified admin API custom domain** — Single custom domain (`api-admin-dev.mysafespaces.net` / `api-admin.mysafespaces.net`) with path-based routing to all admin Lambda services (CRM, HR, RBAC, SWISS, CN, CP, Customers, Jobs). Eliminates raw API Gateway URLs in browser, simplifies CORS (single origin), and reduces frontend SSM params to one `REACT_APP_ADMIN_API_URL`. Requires: ACM cert, API Gateway custom domain + base path mappings, Route 53 record, update SSM params + Amplify rebuild.
 
-### Scheduling — Deferred
-
-- [ ] **Aadhaar OCR validation** — The system already stores `aadhaar_photo_key` (S3 reference to the uploaded Aadhaar card image). Add OCR/scanning via AWS Textract to extract the 12-digit number from the card photo and cross-check it against what the user entered during registration. Prevents typos and fraudulent submissions. Affects: `mss-journipro-scheduling` (client registration handler), possibly a new shared utility in `mss-journipro-core`.
-- [ ] **Timezone handling for India** — Booking portal and scheduling UI currently show raw UTC/ISO timestamps. Display all dates/times in IST (`Asia/Kolkata`) consistently across booking portal, practitioner scheduling, and admin scheduling. Backend email templates already use `Asia/Kolkata` — frontend needs the same treatment. Affects: `mss-journipro-web` (scheduling components, booking portal), `mss-journipro-booking-portal`.
-- [ ] **Aggregate calendar view for admin** — Admin scheduling page currently shows per-practitioner bookings. Add a calendar/grid view showing availability and bookings across all practitioners — by day/time slot and by practitioner. Enables admins to see practice-wide capacity at a glance. Affects: `mss-journipro-web` (AdminSchedulingPage), possibly `mss-journipro-scheduling` (new endpoint for aggregated availability).
-- [ ] **Patient activity: full booking lifecycle** — The patient activity endpoint currently only shows the latest booking status (e.g. CONFIRMED). It should document the full lifecycle — when the session was booked, rescheduled, and cancelled — as separate timeline entries with timestamps. Affects: `mss-journipro-scheduling` (patient activity endpoint), possibly `mss_sched_bookings` table (may need to track status change history).
-
 ### Shared SSM Parameter Stack
 
 - [ ] **CloudFormation stack for shared SSM parameters** — Create `mss-shared-params-{env}` stack (in `.github` repo or dedicated infra repo) that defines all cross-repo SSM parameters as `AWS::SSM::Parameter` resources. Currently portal URLs, CORS origins, and other shared config are created manually via CLI — no version control, no drift detection, no audit trail. Stack should cover: portal URLs (`/mysafespaces/{env}/portal/*`), CORS allowed origins, and any other params consumed by multiple repos. Deploy via CI/CD with `workflow_dispatch` per environment.
@@ -40,7 +32,6 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 - [ ] `mss-journipro-auth`: `deploy-lambda.yml` → `deploy-auth.yml`
 - [ ] `mss-journipro-patient-sessions`: `deploy-lambda.yml` → `deploy-sessions.yml`
 - [ ] `mss-journipro-people`: `deploy-lambda.yml` → `deploy-people.yml`
-- [ ] `mss-journipro-scheduling`: `deploy-lambda.yml` → `deploy-scheduling.yml`
 - [ ] `mss-journipro-admin`: `deploy-lambda.yml` → `deploy-admin.yml`
 - [ ] `mysafespaces-blog-service`: `deploy.yml` → `deploy-blog.yml`
 - [ ] `hj-mysafespaces-finance`: `deploy-backend.yml` → `deploy-finance.yml`
@@ -49,7 +40,6 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 - [ ] `mss-journipro-auth`
 - [ ] `mss-journipro-patient-sessions`
 - [ ] `mss-journipro-people`
-- [ ] `mss-journipro-scheduling`
 
 **Add `trigger-amplify` step** after infra deploy — triggers `mss-journipro-web` rebuild (Amplify app `drrqvxvmu5f7h`):
 - [ ] `mss-journipro-auth`
