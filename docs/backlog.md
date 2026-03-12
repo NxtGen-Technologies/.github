@@ -57,6 +57,17 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 - [ ] `mysafespaces-assets` — fold test job into `deploy-assets.yml`
 - [ ] `mysafespaces-webinar` — fold test job into `deploy-webinar.yml`
 
+### JourniPro — Session Notes & Scheduling
+
+- [ ] **Internal booking from therapist/admin/supervisor UI** — Allow practitioners to book a session with a patient directly from the web app (e.g., from session notes Treatment Planning section or patient detail page). Requires:
+  - `useCreateBooking` hook calling scheduling API `POST /bookings` (currently only used by booking portal)
+  - Available slots query: `GET /scheduling/practitioners/{id}/available-slots?date=YYYY-MM-DD` (endpoint exists)
+  - Booking dialog: date picker → slot grid → confirm (reuse patterns from booking portal `mss-journipro-booking-portal`)
+  - Wire into Treatment Planning section ("Schedule Next Session" button) and patient actions menu
+  - Handle: patient already linked (skip linking step), practitioner = current user, modality selection
+  - Roles: therapist books own patients, supervisor/admin can book for any practitioner's patients
+- [ ] **Next session display in Treatment Planning** — Once internal booking exists, query patient's next confirmed booking and display date/time in the Treatment Planning section (prop already wired, currently shows "No upcoming session scheduled")
+
 ### JourniPro — Post-Migration
 
 **Bugs / Incomplete:**
