@@ -25,6 +25,8 @@
 | `mss-journipro-patient-sessions` | `GitHub/mss-journipro-patient-sessions` | SOAP notes + review workflow Lambda |
 | `mss-journipro-people` | `GitHub/mss-journipro-people` | People directory service |
 | `mss-journipro-web` | `GitHub/mss-journipro-web` | Practitioner/admin app (Next.js) |
+| `mss-journipro-scheduling` | `GitHub/mss-journipro-scheduling` | Scheduling + booking API (Lambda) |
+| `mss-journipro-booking-portal` | `GitHub/mss-journipro-booking-portal` | Public booking portal (Next.js) |
 
 ---
 
