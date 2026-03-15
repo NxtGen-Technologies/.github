@@ -57,6 +57,15 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 - [ ] `mysafespaces-assets` — fold test job into `deploy-assets.yml`
 - [ ] `mysafespaces-webinar` — fold test job into `deploy-webinar.yml`
 
+### Notification Service — Phase 2
+
+- [ ] **Resend confirmation email** — "Resend Confirmation" button on therapist booking detail view. New endpoint `POST /scheduling/practitioner/bookings/:id/resend` → re-fetches `fetchBookingEmailData()` (picks up latest video link, times, etc.) → fires `notifyBookingConfirmed()`. No new event type needed — reuses existing template. Useful when practitioner updates video link or needs to remind patient.
+- [ ] **Session notes reminder** — EventBridge cron (every 15 min), sends reminder to therapist 30 min after session ends if notes not submitted
+- [ ] **Daily therapist digest** — 9:00 AM IST, lists sessions needing notes
+- [ ] **Daily supervisor digest** — 9:30 AM IST, lists pending reviews
+- [ ] **Review workflow notifications** — `SESSION_SUBMITTED_FOR_REVIEW` (→ supervisor), `REVISION_REQUESTED` (→ therapist) from patient-sessions Lambda
+- [ ] **Notification preferences table** — opt-out model, `mss_notification_preferences`
+
 ### JourniPro — Session Notes & Scheduling
 
 - [ ] **Availability engine rework** — Rework `mss-scheduling-core` availability engine for reliability and scalability. Design walkthrough needed covering: (1) **Architecture** — pre-computed/cached slots vs on-demand, event-driven invalidation on schedule/booking changes; (2) **Algorithm** — timezone-aware interval arithmetic, interval tree for overlap detection, DST handling, multi-practitioner batch queries; (3) **Scalability** — batch availability for search results, slot pagination, caching layer with invalidation, background pre-computation. Design-only first, then implement.
