@@ -66,6 +66,14 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 - [ ] **Review workflow notifications** — `SESSION_SUBMITTED_FOR_REVIEW` (→ supervisor), `REVISION_REQUESTED` (→ therapist) from patient-sessions Lambda
 - [ ] **Notification preferences table** — opt-out model, `mss_notification_preferences`
 
+### Scheduling — Booking Settings
+
+- [x] **Therapist booking settings page** — `/therapist/booking-settings` with editable profile fields (bio, photo, video link, accepting clients) and read-only admin-managed fields (rate, modalities, advance booking, free sessions). Deployed 2026-03-15.
+- [x] **Bookings default filter** — Bookings page defaults to Pending & Confirmed. Dropdown allows all statuses. Deployed 2026-03-15.
+- [ ] **Video URL cascade on change** — When therapist changes their Meet link, update all future CONFIRMED bookings with the new URL and optionally re-send notification emails. Currently changes only apply to new bookings.
+- [ ] **Backend multi-status filter for bookings** — `GET /scheduling/my/bookings` only supports single `status` param. Add support for comma-separated or `status[]=` to filter server-side (currently "Pending & Confirmed" is filtered client-side).
+- [ ] **Practitioner calendar invite with buffer** — Ask practitioner: should their calendar invite block the full time (session + buffer for notes), or just the session time? Currently both patient and practitioner get the same invite showing patient time only. If practitioner prefers buffer included, generate two separate ICS files: patient invite (`start → start + slot`), practitioner invite (`start → start + slot + buffer`). Affects: `mysafespaces-notifications/src/lib/calendar.ts`, scheduling Lambda email/notification calls.
+
 ### JourniPro — Session Notes & Scheduling
 
 - [ ] **Availability engine rework** — Rework `mss-scheduling-core` availability engine for reliability and scalability. Design walkthrough needed covering: (1) **Architecture** — pre-computed/cached slots vs on-demand, event-driven invalidation on schedule/booking changes; (2) **Algorithm** — timezone-aware interval arithmetic, interval tree for overlap detection, DST handling, multi-practitioner batch queries; (3) **Scalability** — batch availability for search results, slot pagination, caching layer with invalidation, background pre-computation. Design-only first, then implement.
