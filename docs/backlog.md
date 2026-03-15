@@ -59,6 +59,7 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 
 ### JourniPro — Session Notes & Scheduling
 
+- [ ] **Availability engine rework** — Rework `mss-scheduling-core` availability engine for reliability and scalability. Design walkthrough needed covering: (1) **Architecture** — pre-computed/cached slots vs on-demand, event-driven invalidation on schedule/booking changes; (2) **Algorithm** — timezone-aware interval arithmetic, interval tree for overlap detection, DST handling, multi-practitioner batch queries; (3) **Scalability** — batch availability for search results, slot pagination, caching layer with invalidation, background pre-computation. Design-only first, then implement.
 - [ ] **Internal booking from therapist/admin/supervisor UI** — Allow practitioners to book a session with a patient directly from the web app (e.g., from session notes Treatment Planning section or patient detail page). Requires:
   - `useCreateBooking` hook calling scheduling API `POST /bookings` (currently only used by booking portal)
   - Available slots query: `GET /scheduling/practitioners/{id}/available-slots?date=YYYY-MM-DD` (endpoint exists)
