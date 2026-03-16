@@ -1,6 +1,6 @@
 ## Pending / Backlog
 
-**Last Updated:** March 5, 2026
+**Last Updated:** March 16, 2026
 
 - [ ] **SEO report**
 - [ ] **Booking portal — website header & footer** — Replace the booking portal's minimal header/footer (`mss-journipro-booking-portal`) with the full `mysafespaces-website` header (two-row: top utility bar + main nav with dropdowns) and footer (5-column grid with links + contact row). The website uses vanilla CSS + CRA; the booking portal uses Next.js 15 + TypeScript + Tailwind v4 — so the website components need to be adapted (port CSS to Tailwind or import as standalone CSS). Booking-specific nav items (Book a Session, My Bookings, Login/Logout based on auth state) should be integrated into the website-style header. Affects: `mss-journipro-booking-portal` (Header.tsx, Footer.tsx, layout.tsx, globals.css).
@@ -36,10 +36,11 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 - [ ] `mysafespaces-blog-service`: `deploy.yml` → `deploy-blog.yml`
 - [ ] `hj-mysafespaces-finance`: `deploy-backend.yml` → `deploy-finance.yml`
 
-**Add SAM infra deploy job** (detect-changes + deploy-infra) — currently only `mss-journipro-admin` has this:
+**Add SAM infra deploy job (always-run pattern)** — `deploy-infra` runs on every push (not gated by template changes) so CF drift is always healed. Reference: `mss-journipro-admin/deploy-journipro-admin.yml`. Background: `detect-changes + conditional` pattern was retired after a CF drift incident where `SSM_INTERNAL_TOKEN_PATH` was lost from dev Lambda and SAM never re-applied it because CF thought it was already correct. For simpler repos without machine-to-machine auth, the conditional pattern is acceptable but always-run is safer.
 - [ ] `mss-journipro-auth`
 - [ ] `mss-journipro-patient-sessions`
 - [ ] `mss-journipro-people`
+- [ ] `mss-journipro-scheduling`
 
 **Add `trigger-amplify` step** after infra deploy — triggers `mss-journipro-web` rebuild (Amplify app `drrqvxvmu5f7h`):
 - [ ] `mss-journipro-auth`
@@ -47,6 +48,10 @@ Align all repos with the workflow standards in `claude/global-standards.md` → 
 - [ ] `mss-journipro-patient-sessions`
 - [ ] `mss-journipro-people`
 - [ ] Add `AMPLIFY_APP_ID` + `AMPLIFY_BRANCH` GitHub secrets to all JourniPro repos
+
+**Lambda config error hardening** — Replace `.catch(() => null)` on `getInternalApiToken()` (and similar SSM reads) with a `resolveAuth`-style helper that returns 500 on config errors instead of silently converting them to 401. Done in `mss-journipro-admin` (2026-03-16). Apply to other repos that do machine-to-machine auth via `X-Internal-Token`:
+- [ ] `mss-journipro-scheduling` — check for similar `catch(() => null)` or `catch(() => {})` patterns on SSM/config reads in auth paths
+- [ ] `mss-journipro-patient-sessions` — same audit
 
 **Add smoke tests** to workflows that lack them:
 - [ ] `mysafespaces-blog-service` — test health / public endpoint
