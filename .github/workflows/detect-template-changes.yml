@@ -16,7 +16,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Check for template.yaml changes
         id: detect
@@ -24,8 +24,18 @@ jobs:
           # workflow_dispatch always deploys infra (may be triggered specifically for that)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
-          elif git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q '^template\.yaml$'; then
-            echo "changed=true" >> $GITHUB_OUTPUT
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            # Compare all commits in this push (handles fast-forward merges
+            # that bring multiple commits). github.event.before is the
+            # previous HEAD of the branch before the push.
+            BEFORE="${{ github.event.before }}"
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              # New branch or missing before — fall back to HEAD~1
+              BEFORE="HEAD~1"
+            fi
+            if git diff --name-only "$BEFORE" HEAD 2>/dev/null | grep -q '^template\.yaml$'; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
           fi
