@@ -36,18 +36,37 @@ build-test-deploy┘                                     ├── smoke-test
 
 ### Required GitHub Secrets
 
-All Lambda repos need these secrets:
+Each Lambda repo using these shared workflows needs the following secrets. Use `secrets: inherit` in the calling workflow to pass them to reusable workflows.
 
-| Secret | Description |
-|--------|-------------|
-| `AWS_ACCESS_KEY_ID` | IAM access key |
-| `AWS_SECRET_ACCESS_KEY` | IAM secret key |
-| `AWS_REGION` | `ap-south-1` |
-| `LAMBDA_FUNCTION_DEV` | Dev Lambda function name |
-| `LAMBDA_FUNCTION_PROD` | Prod Lambda function name |
-| `SMOKE_URL_DEV` | Dev API base URL |
-| `SMOKE_URL_PROD` | Prod API base URL |
-| `AMPLIFY_APP_ID` | Amplify app ID (for trigger-amplify) |
+**Org-level secrets** (shared across repos — set at NxtGen-Technologies org settings):
+
+| Secret | Value | Used by |
+|--------|-------|---------|
+| `AWS_ACCESS_KEY_ID` | IAM access key for CI/CD | `deploy-sam-infra`, `deploy-lambda-code`, `trigger-amplify` |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret key for CI/CD | `deploy-sam-infra`, `deploy-lambda-code`, `trigger-amplify` |
+| `AWS_REGION` | `ap-south-1` | `deploy-sam-infra`, `deploy-lambda-code`, `trigger-amplify` |
+
+> **Note:** If org secrets are scoped to public repos only, private repos must add these as repo-level secrets.
+
+**Repo-level secrets** (unique per service — set at each repo's Settings → Secrets):
+
+| Secret | Example value | Used by |
+|--------|---------------|---------|
+| `LAMBDA_FUNCTION_DEV` | `mss-journipro-reviews-handler-dev` | `deploy-lambda-code` |
+| `LAMBDA_FUNCTION_PROD` | `mss-journipro-reviews-handler-prod` | `deploy-lambda-code` |
+| `SMOKE_URL_DEV` | `https://api-sessions-dev.mysafespaces.net` | `smoke-test-lambda` |
+| `SMOKE_URL_PROD` | `https://api-sessions.mysafespaces.org` | `smoke-test-lambda` |
+| `AMPLIFY_APP_ID` | Amplify app ID (from console) | `trigger-amplify` |
+| `CORE_REPO_READ_TOKEN` | GitHub PAT with `repo` scope | `deploy-sam-infra`, `deploy-lambda-code` |
+
+`CORE_REPO_READ_TOKEN` is optional — only needed by repos that clone `mss-journipro-core` (or another private repo) as a build dependency via `pre-install-command`.
+
+#### Smoke URL values by platform
+
+| Platform | Dev | Prod |
+|----------|-----|------|
+| JourniPro services | `https://api-sessions-dev.mysafespaces.net` | `https://api-sessions.mysafespaces.org` |
+| MSS Admin services | Service-specific (see each repo's deploy workflow) | Service-specific |
 
 ## Scripts
 
